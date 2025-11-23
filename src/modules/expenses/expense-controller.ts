@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import ExpenseService from "./expense-service";
 import { CreateExpenseDto } from "./dto/create-expense-dto";
 import { fail } from "@shared/helpers/service-result";
+import { ListByCategoryQuery } from "./params/list-by-category-query";
 
 export default class ExpenseController {
     constructor(private _expenseService = new ExpenseService()) {}
@@ -47,9 +48,15 @@ export default class ExpenseController {
         }
     }
 
-    listByCategory = async (_req: FastifyRequest, reply: FastifyReply) => {
+    listByCategory = async (req: FastifyRequest<{ Querystring: ListByCategoryQuery }>, reply: FastifyReply) => {
         try {
-            const result = await this._expenseService.list();
+            const validation = ListByCategoryQuery.safeParse(req.query);
+
+            if (!validation.success) {
+                return reply.status(400).send(fail('Parâmetros inválidos'));
+            }
+
+            const result = await this._expenseService.listByCategory(validation.data);
 
             if (!result.success) {
                 return reply.status(422).send(result);

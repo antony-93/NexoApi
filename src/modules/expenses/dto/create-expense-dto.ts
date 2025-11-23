@@ -5,7 +5,7 @@ export const CreateExpenseDto = z.array(z.object({
     amount: z.number().positive("O valor deve ser positivo"),
     categoryId: z.uuid({ message: "ID da categoria inválido" }),
     date: z.coerce.date({
-        message: "Data de pagamento deve ser uma data válida"
+        error: "Data de pagamento deve ser uma data válida"
     })
 }));
 
