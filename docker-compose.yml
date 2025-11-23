@@ -1,0 +1,53 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nexo_api
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./src/config/.env
+    networks:
+      - nexo_net
+
+  database:
+    image: postgres:16
+    container_name: nexo_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: nexo
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - nexo_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d nexo"]
+      interval: 5s
+      retries: 5
+      timeout: 5s
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=2GB
+      -c effective_cache_size=6GB
+      -c maintenance_work_mem=512MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c wal_level=replica
+      -c synchronous_commit=on
+      -c full_page_writes=off
+
+volumes:
+  pgdata:
+
+networks:
+  nexo_net:
